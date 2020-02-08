@@ -1,15 +1,6 @@
 from django.db import models
 
-
-class BasicModel(models.Model):
-    add_time = models.DateTimeField(auto_now_add=True, null=True)
-    add_user = models.IntegerField(null=True)
-    update_time = models.DateTimeField(auto_now=True)
-    update_user = models.IntegerField(null=True)
-    is_deleted = models.IntegerField(choices=('0', '1'), null=True)
-
-    class Meta:
-        abstract = True
+from basic.models import BasicModel
 
 
 class User(BasicModel):
@@ -18,7 +9,7 @@ class User(BasicModel):
     password = models.CharField(max_length=100)
     email = models.EmailField
     phone = models.CharField(max_length=50)
-    is_admin = models.IntegerField(choices=('0', '1'))
+    is_admin = models.IntegerChoices('0', '1')
 
     @property
     def username(self):
