@@ -1,6 +1,6 @@
 
 .idea
-.venv
+venv
 .idea/dataSources.xml
 venv/Include/
 venv/Lib/site-packages/abstract-2020.1.6.dist-info/
