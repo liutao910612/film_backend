@@ -6,6 +6,7 @@ from basic.models import BasicModel
 class Film(BasicModel):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
+    desc = models.CharField(max_length=200)
     img = models.CharField(max_length=200, null=True)
     video = models.CharField(max_length=200, null=True)
     suppose_num = models.IntegerField(default=0)
