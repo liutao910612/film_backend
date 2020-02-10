@@ -7,9 +7,7 @@ class User(BasicModel):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     password = models.CharField(max_length=100)
-    email = models.EmailField
     phone = models.CharField(max_length=50)
-    is_admin = models.IntegerChoices('0', '1')
 
     @property
     def username(self):
