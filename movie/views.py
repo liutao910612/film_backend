@@ -1,6 +1,13 @@
-from django.http import HttpResponse
+import json
+
+from django.forms import model_to_dict
+from django.http import HttpResponse, JsonResponse
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
+
+from basic.httpUtils import ResponseHelper
+from movie.services import FilmService
 
 
 @require_http_methods(["POST"])  # require_POST()
@@ -11,7 +18,7 @@ def support_film(request):
     """
 
     # Any view should return httpResponse object
-    return HttpResponse('ok')
+    return JsonResponse('ok')
 
 
 @require_POST
@@ -28,10 +35,25 @@ def get_films(request, start=1, amount=5):
 
 class FilmView(View):
     def get(self, request):
-        pass
+        film_id = request.GET.get('film_id')
+        if film_id is None:
+            return ResponseHelper.build_fail("film_id is empty")
+        film_service = FilmService()
+        film = film_service.get_film_by_id(film_id)
+        return ResponseHelper.build_success(model_to_dict(film))
 
+    @csrf_exempt
     def post(self, request):
-        pass
+        data = json.loads(request.body)
+        name = data['name']
+        img = data['img']
+        video = data['video']
+        main_page = data['main_page']
+        if name is None:
+            return ResponseHelper.build_fail("name is empty")
+        film_service = FilmService()
+        film_id = film_service.create_film(name, img, video, main_page);
+        return ResponseHelper.build_success({"film_id": film_id})
 
     def put(self, request):
         pass

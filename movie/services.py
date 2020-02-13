@@ -3,7 +3,7 @@ from django.db.models import Q, F, Avg, Max, Min
 from movie.models import Film
 
 
-class MovieService:
+class FilmService:
 
     def create_film(self, name, img, video, main_page):
         """
@@ -20,6 +20,11 @@ class MovieService:
         film = Film(name=name, img=img, video=video, main_page=main_page)
         film.save()
         """
+
+        # Check whether the film name exist
+        if Film.objects.get(name=name) is not None:
+            return Film.objects.get(name=name).id
+
         film = Film.objects.create(name=name, img=img, video=video, main_page=main_page)
         return film.id
 
@@ -39,7 +44,7 @@ class MovieService:
         """
         return film
 
-    def get_film_by_id(self, id):
+    def get_film_by_id(self,id):
         """
         get film by id
         you can get the object by using get()
