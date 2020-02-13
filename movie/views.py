@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from basic.httpUtils import ResponseHelper
+from movie import constants
 from movie.services import FilmService
 
 
@@ -16,9 +17,13 @@ def support_film(request):
     Give a like to film
     :return:
     """
+    film_id = request.GET.get('film_id')
+    if film_id is None :
+        return ResponseHelper.build_fail(constants.FILM_ID_IS_EMPTY)
 
-    # Any view should return httpResponse object
-    return JsonResponse('ok')
+    film_service = FilmService()
+    film_service.support_film(film_id)
+    return ResponseHelper.build_success(None)
 
 
 @require_POST
@@ -55,8 +60,24 @@ class FilmView(View):
         film_id = film_service.create_film(name, img, video, main_page);
         return ResponseHelper.build_success({"film_id": film_id})
 
+    @csrf_exempt
     def put(self, request):
-        pass
+        data = json.loads(request.body)
+        film_id = data['film_id']
+        img = data['img']
+        video = data['video']
+        main_page = data['main_page']
+        if film_id is None:
+            return ResponseHelper.build_fail(constants.FILM_ID_IS_EMPTY)
+
+        if img is None and video is None and main_page is None:
+            return ResponseHelper.build_fail(constants.UPDATED_FIELDS_ARE_EMPTY)
+
+        film_service = FilmService()
+        film_service.update_film_by_id(film_id,img,video,main_page)
+        return ResponseHelper.build_success()
+
+
 
     def delete(self, request):
         pass
