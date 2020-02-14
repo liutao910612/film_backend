@@ -1,3 +1,6 @@
+import hashlib
+import random
+
 from django.db import connection
 
 from account.models import User
@@ -5,12 +8,28 @@ from basic.utils import CommonUtils
 
 
 class UserService:
+    ALPHABET = "zyxwvutsrqponmlkjihgfedcba"
     """
     I will use raw sql for this service
     """
+    def register_user(self,first_name, last_name, password, email, phone,address,hobby):
 
-    def create_user(first_name, last_name, password, email, phone, is_admin):
-        pass
+        # Check whether the phone exist
+        count = User.objects.filter(phone=phone).count()
+        if count > 0:
+            return 0
+
+        salt = "".join(random.sample(self.ALPHABET,5))
+        md5 = hashlib.md5(salt)
+        md5.update(password.encode('utf-8'))
+        pwd = md5.hexdigest()
+        user_id = self.create_user(first_name,last_name,pwd,email,phone)
+        self.create_user_detail(user_id,address,hobby)
+        return 1
+
+    def create_user(self,first_name, last_name, password, email, phone):
+
+        return 1
 
     def create_user_detail(user_id, address, hobby):
         pass
@@ -52,10 +71,9 @@ class UserService:
         sql = 'select a.id' \
               ',a.first_name' \
               ',a.last_name' \
-              ',a.password' \
               ',a.phone' \
               ',b.address' \
-              ',b.address from account_user a inner join account_userdetail b on a.id = b.user_id ' \
+              ',b.hobby from account_user a inner join account_userdetail b on a.id = b.user_id ' \
               ' where a.id = %s'
         with connection.cursor() as cursor:
             cursor.execute(sql,[user_id])

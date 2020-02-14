@@ -1,7 +1,6 @@
 import json
 
 from django.forms import model_to_dict
-from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -50,10 +49,10 @@ class FilmView(View):
     @csrf_exempt
     def post(self, request):
         data = json.loads(request.body)
-        name = data['name']
-        img = data['img']
-        video = data['video']
-        main_page = data['main_page']
+        name = data.get('name')
+        img = data.get('img')
+        video = data.get('video')
+        main_page = data.get('main_page')
         if name is None:
             return ResponseHelper.build_fail("name is empty")
         film_service = FilmService()
@@ -63,10 +62,10 @@ class FilmView(View):
     @csrf_exempt
     def put(self, request):
         data = json.loads(request.body)
-        film_id = data['film_id']
-        img = data['img']
-        video = data['video']
-        main_page = data['main_page']
+        film_id = data.get('film_id')
+        img = data.get('img')
+        video = data.get('video')
+        main_page = data.get('main_page')
         if film_id is None:
             return ResponseHelper.build_fail(constants.FILM_ID_IS_EMPTY)
 
