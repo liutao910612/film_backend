@@ -1,5 +1,6 @@
 import json
 
+from django.db import transaction
 from django.forms import model_to_dict
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -24,7 +25,8 @@ class UserView(View):
         user_detail = user_service.get_user_detail_by_id(user_id)
         return ResponseHelper.build_success(model_to_dict(user_detail))
 
-    @csrf_exempt()
+    @csrf_exempt
+    @transaction.atomic
     def post(self, request):
         """
         Register user
@@ -32,25 +34,16 @@ class UserView(View):
         :return:
         """
         data = json.loads(request.body)
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        phone = data.get("phone")
         email = data.get("email")
+        email_code = data.get("email_code")
         password = data.get("password")
-        address = data.get("address")
-        hobby = data.get("hobby")
 
-        if first_name is None or len(first_name) > 10 or len(first_name) < 1:
-            return ResponseHelper.build_fail(constants.FIRST_NAME_IS_INVALID)
+        user_service = UserService()
+        count = user_service.register_user(email,email_code,password)
+        if count < 1:
+            return ResponseHelper.build_fail(constants.REGISTER_FAIL)
 
-        if last_name is None or len(last_name) > 10 or len(last_name) < 1:
-            return ResponseHelper.build_fail(constants.LAST_NAME_IS_INVALID)
-
-        if phone is None or len(phone) > 10 or len(phone) < 6:
-            return ResponseHelper.build_fail(constants.PASSWORD_IS_INVALID)
-
-
-        pass
+        return ResponseHelper.build_fail(constants.REGISTER_SUCCESS)
 
     def put(self, request):
         """
@@ -66,4 +59,15 @@ class UserView(View):
         :param request:
         :return:
         """
+        token = request.META.get("TOKEN")
+        # TODO get user_id by token
+        user_id = 1
+        user_service = UserService()
+        user_service.delete_user(user_id)
+
+        # TODO logout user
+        return ResponseHelper.build_success()
+
+class EmailCodeView(View):
+    def get(self,email):
         pass

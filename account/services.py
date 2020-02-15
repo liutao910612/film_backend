@@ -3,7 +3,7 @@ import random
 
 from django.db import connection
 
-from account.models import User
+from account.models import User, UserDetail
 from basic.utils import CommonUtils
 
 
@@ -12,27 +12,47 @@ class UserService:
     """
     I will use raw sql for this service
     """
-    def register_user(self,first_name, last_name, password, email, phone,address,hobby):
+    def register_user(self,email, email_code,password):
 
-        # Check whether the phone exist
-        count = User.objects.filter(phone=phone).count()
+        # Check email
+        count = User.objects.filter(email=email).count()
         if count > 0:
             return 0
+
+        # TODO Check email code
 
         salt = "".join(random.sample(self.ALPHABET,5))
         md5 = hashlib.md5(salt)
         md5.update(password.encode('utf-8'))
         pwd = md5.hexdigest()
-        user_id = self.create_user(first_name,last_name,pwd,email,phone)
-        self.create_user_detail(user_id,address,hobby)
+        user = User(email = email,password=pwd,salt=salt)
+        user.save()
         return 1
 
-    def create_user(self,first_name, last_name, password, email, phone):
+    def create_user(self,first_name, last_name, password, email, phone,salt):
+        """
+        Create user
+        :param first_name:
+        :param last_name:
+        :param password:
+        :param email:
+        :param phone:
+        :param salt:
+        :return:
+        """
+        user = User(first_name,last_name,password,email,phone,salt)
+        user.save()
 
-        return 1
-
-    def create_user_detail(user_id, address, hobby):
-        pass
+    def create_user_detail(self,user_id, address, hobby):
+        """
+        Create user detail
+        :param user_id:
+        :param address:
+        :param hobby:
+        :return:
+        """
+        userDetail = UserDetail(user_id,address,hobby)
+        userDetail.save()
 
     def delete_user(self, user_id):
         """

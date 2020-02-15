@@ -4,11 +4,11 @@ from basic.models import BasicModel
 
 
 class User(BasicModel):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
+    first_name = models.CharField(max_length=50,null=True)
+    last_name = models.CharField(max_length=50,null=True)
     password = models.CharField(max_length=100)
-    phone = models.CharField(max_length=50)
-    email = models.CharField(max_length=50,default=None)
+    phone = models.CharField(max_length=50,null=True)
+    email = models.CharField(max_length=50)
     salt = models.CharField(max_length=5,default=None)
 
     @property
