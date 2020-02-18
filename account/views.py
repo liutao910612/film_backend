@@ -6,7 +6,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from account import constants
-from account.services import UserService
+from account.services import UserService, EmailCodeService
 from basic.httpUtils import ResponseHelper
 
 
@@ -69,5 +69,18 @@ class UserView(View):
         return ResponseHelper.build_success()
 
 class EmailCodeView(View):
-    def get(self,email):
-        pass
+    def get(self,request):
+        """
+        Get email code
+        :param email:
+        :param is_test:
+        :return:
+        """
+        email = request.GET.get("email")
+        is_test = request.GET.get("is_test")
+        email_code_service = EmailCodeService()
+        email_code = email_code_service.send_email(email,is_test)
+        if is_test:
+            return ResponseHelper.build_success({"email_code":email_code})
+
+        return ResponseHelper.build_success()
