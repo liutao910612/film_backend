@@ -1,9 +1,12 @@
 import hashlib
 import math
 import random
+import uuid
 
 from django.db import connection
 
+from account import constants
+from account.exceptions import SessionException, RegisterException
 from account.models import User, UserDetail
 from basic.commonUtils import LocalCacheUtil
 from basic.utils import CommonUtils, EmailUtils
@@ -21,10 +24,12 @@ class UserService:
         if count > 0:
             return 0
 
-        # TODO Check email code
+        e_code = LocalCacheUtil.get_cache('email_code_' + email)
+        if email_code is None or e_code != email_code:
+            raise RegisterException("Regsiter failed , email code is invalid!")
 
         salt = "".join(random.sample(self.ALPHABET, 5))
-        md5 = hashlib.md5(salt)
+        md5 = hashlib.md5(salt.encode())
         md5.update(password.encode('utf-8'))
         pwd = md5.hexdigest()
         user = User(email=email, password=pwd, salt=salt)
@@ -115,13 +120,41 @@ class EmailCodeService:
         message = "you email code is : " + email_code
         from_email = "film.backend@alvin.com"
         to_email = email
-        EmailUtils.send_email(subject,message,from_email,to_email)
-        LocalCacheUtil.add_cache('email_code',email_code,60 * 5)
+        EmailUtils.send_email(subject, message, from_email, to_email)
+        LocalCacheUtil.add_cache('email_code_' + email, email_code, 60 * 5)
 
     def __get_email_code(self):
         """
         Get email code
         :return:
         """
-        email_code = random.randrange(100000,1000000)
+        email_code = random.randrange(100000, 1000000)
         return str(email_code)
+
+
+class SessionService:
+
+    def create_session(self, email, password):
+        user = User.objects.get(email=email)
+        if user is None:
+            raise SessionException("User don't exist")
+
+        salt = user.salt
+        pwd = user.password
+
+        md5 = hashlib.md5(salt.encode())
+        md5.update(password.encode('utf-8'))
+        pwd_before_md5 = md5.hexdigest()
+        if pwd_before_md5 != pwd:
+            raise SessionException(constants.PASSWORD_IS_INVALID)
+
+        token = uuid.uuid1()
+        LocalCacheUtil.add_cache("token-" + token.__str__(), user.__dict__, 5 * 60)
+        return token
+
+    def delete_session(token):
+        user_dict = LocalCacheUtil.get_data("token-" + token.__str__())
+        if user_dict is not None:
+            LocalCacheUtil.delete_cache(token)
+            return user_dict.get("username")
+        return None

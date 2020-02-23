@@ -3,11 +3,11 @@ import json
 from django.db import transaction
 from django.forms import model_to_dict
 from django.views import View
-from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
 from account import constants
-from account.services import UserService, EmailCodeService
+from account.exceptions import RegisterException
+from account.services import UserService, EmailCodeService, SessionService
 from basic.httpUtils import ResponseHelper
 
 
@@ -40,7 +40,10 @@ class UserView(View):
         password = data.get("password")
 
         user_service = UserService()
-        count = user_service.register_user(email,email_code,password)
+        try:
+            count = user_service.register_user(email,email_code,password)
+        except RegisterException as e:
+            return ResponseHelper.build_fail(e.reason)
         if count < 1:
             return ResponseHelper.build_fail(constants.REGISTER_FAIL)
 
@@ -86,3 +89,36 @@ class EmailCodeView(View):
             return ResponseHelper.build_success({"email_code":email_code})
 
         return ResponseHelper.build_success()
+
+# session manager
+class SessionView(View):
+
+    @csrf_exempt
+    def post(self, request):
+        """
+        login
+        :param request:
+        :return:
+        """
+        data = json.loads(request.body)
+        email = data['email']
+        password = data['password']
+
+        # check parameter
+        if email is None or len(email) == 0:
+            return ResponseHelper.build_fail(constants.EMAIL_IS_INVALID)
+        if password is None or len(password) == 0:
+            return ResponseHelper.build_fail(constants.PASSWORD_IS_INVALID)
+
+        session_service = SessionService()
+        token = session_service.create_session(email,password)
+        return ResponseHelper.build_success({"token":token.__str__()})
+
+    # User login out
+    def delete(self, request):
+        token = request.META.get("TOKEN")
+        if token is None:
+            return ResponseHelper.build_fail('token is null')
+        username = SessionService.delete_session(token)
+        return  ResponseHelper.build_success({"username":username})
+
