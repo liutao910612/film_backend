@@ -5,6 +5,7 @@ import random
 from django.db import connection
 
 from account.models import User, UserDetail
+from basic.commonUtils import LocalCacheUtil
 from basic.utils import CommonUtils, EmailUtils
 
 
@@ -115,14 +116,12 @@ class EmailCodeService:
         from_email = "film.backend@alvin.com"
         to_email = email
         EmailUtils.send_email(subject,message,from_email,to_email)
+        LocalCacheUtil.add_cache('email_code',email_code,60 * 5)
 
     def __get_email_code(self):
         """
         Get email code
         :return:
         """
-        email_code = ""
-        for i in range(6):
-            ch = chr(random.randrange(ord('0'), ord('9') + 1))
-            email_code += ch
-        return email_code
+        email_code = random.randrange(100000,1000000)
+        return str(email_code)

@@ -3,6 +3,7 @@ import json
 from django.db import transaction
 from django.forms import model_to_dict
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.decorators.csrf import csrf_exempt
 
 from account import constants
@@ -69,6 +70,7 @@ class UserView(View):
         return ResponseHelper.build_success()
 
 class EmailCodeView(View):
+
     def get(self,request):
         """
         Get email code
